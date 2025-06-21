@@ -11,6 +11,7 @@ import MultipleSwap from "./pages/MultipleSwap";
 import Pricing from "./pages/Pricing";
 import Documentation from "./pages/Documentation";
 import ApiDocumentation from "./pages/ApiDocumentation";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/api-docs" element={<ApiDocumentation />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
