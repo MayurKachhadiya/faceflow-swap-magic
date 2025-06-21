@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Send, Upload, Code, Copy, Loader2 } from 'lucide-react';
+import { Send, Upload, Code, Copy, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ export const DashboardApiDocs = () => {
     targetImage: null,
     sourceImages: null
   });
+  const [fileErrors, setFileErrors] = useState<{ [key: string]: string }>({});
 
   const endpoints = [
     {
@@ -36,8 +37,74 @@ export const DashboardApiDocs = () => {
     }
   ];
 
-  const handleFileUpload = (key: string, file: File | null) => {
+  const validateImageFile = (file: File): string | null => {
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return 'Please upload a valid image file (JPEG, PNG, GIF, or WebP)';
+    }
+
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      return 'Image file size must be less than 10MB';
+    }
+
+    // Check if it's actually an image by checking the file signature
+    return new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const arr = new Uint8Array(e.target?.result as ArrayBuffer).subarray(0, 4);
+        let header = '';
+        for (let i = 0; i < arr.length; i++) {
+          header += arr[i].toString(16);
+        }
+        
+        // Check for common image file signatures
+        const imageSignatures = [
+          'ffd8ff', // JPEG
+          '89504e47', // PNG
+          '47494638', // GIF
+          '52494646', // WebP (RIFF)
+        ];
+        
+        const isValidImage = imageSignatures.some(sig => header.startsWith(sig));
+        resolve(isValidImage ? null : 'File does not appear to be a valid image');
+      };
+      reader.onerror = () => resolve('Error reading file');
+      reader.readAsArrayBuffer(file.slice(0, 4));
+    });
+
+    return null;
+  };
+
+  const handleFileUpload = async (key: string, file: File | null) => {
+    if (!file) {
+      setFiles(prev => ({ ...prev, [key]: null }));
+      setFileErrors(prev => ({ ...prev, [key]: '' }));
+      return;
+    }
+
+    // Validate the file
+    const validationError = validateImageFile(file);
+    
+    if (typeof validationError === 'string') {
+      setFileErrors(prev => ({ ...prev, [key]: validationError }));
+      return;
+    }
+
+    if (validationError instanceof Promise) {
+      const error = await validationError;
+      if (error) {
+        setFileErrors(prev => ({ ...prev, [key]: error }));
+        return;
+      }
+    }
+
+    // File is valid
     setFiles(prev => ({ ...prev, [key]: file }));
+    setFileErrors(prev => ({ ...prev, [key]: '' }));
+    toast.success(`${file.name} uploaded successfully!`);
   };
 
   const handleTestRequest = async () => {
@@ -113,6 +180,12 @@ const result = await response.json();
 console.log(result);`;
   };
 
+  const isFormValid = () => {
+    const hasRequiredFiles = files.sourceImage && files.targetImage;
+    const hasNoErrors = Object.values(fileErrors).every(error => !error);
+    return hasRequiredFiles && hasNoErrors;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -167,7 +240,7 @@ console.log(result);`;
             {/* File Uploads */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="source-image">Source Image</Label>
+                <Label htmlFor="source-image">Source Image *</Label>
                 <Input
                   id="source-image"
                   type="file"
@@ -175,10 +248,21 @@ console.log(result);`;
                   onChange={(e) => handleFileUpload('sourceImage', e.target.files?.[0] || null)}
                   className="mt-1"
                 />
+                {fileErrors.sourceImage && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600 dark:text-red-400">
+                    <AlertTriangle className="h-4 w-4" />
+                    {fileErrors.sourceImage}
+                  </div>
+                )}
+                {files.sourceImage && !fileErrors.sourceImage && (
+                  <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+                    ✓ {files.sourceImage.name} ({(files.sourceImage.size / 1024 / 1024).toFixed(2)} MB)
+                  </div>
+                )}
               </div>
               
               <div>
-                <Label htmlFor="target-image">Target Image</Label>
+                <Label htmlFor="target-image">Target Image *</Label>
                 <Input
                   id="target-image"
                   type="file"
@@ -186,6 +270,17 @@ console.log(result);`;
                   onChange={(e) => handleFileUpload('targetImage', e.target.files?.[0] || null)}
                   className="mt-1"
                 />
+                {fileErrors.targetImage && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-red-600 dark:text-red-400">
+                    <AlertTriangle className="h-4 w-4" />
+                    {fileErrors.targetImage}
+                  </div>
+                )}
+                {files.targetImage && !fileErrors.targetImage && (
+                  <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+                    ✓ {files.targetImage.name} ({(files.targetImage.size / 1024 / 1024).toFixed(2)} MB)
+                  </div>
+                )}
               </div>
 
               {activeEndpoint === 'multiple-swap' && (
@@ -199,8 +294,28 @@ console.log(result);`;
                     onChange={(e) => handleFileUpload('sourceImages', e.target.files?.[0] || null)}
                     className="mt-1"
                   />
+                  {fileErrors.sourceImages && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-red-600 dark:text-red-400">
+                      <AlertTriangle className="h-4 w-4" />
+                      {fileErrors.sourceImages}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: JPEG, PNG, GIF, WebP (Max: 10MB each)
+                  </p>
                 </div>
               )}
+            </div>
+
+            {/* File Upload Guidelines */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">File Requirements</h4>
+              <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-1">
+                <li>• Supported formats: JPEG, PNG, GIF, WebP</li>
+                <li>• Maximum file size: 10MB per image</li>
+                <li>• Recommended resolution: 512x512 to 2048x2048 pixels</li>
+                <li>• Clear, well-lit faces work best</li>
+              </ul>
             </div>
 
             {/* Parameters */}
@@ -220,7 +335,7 @@ console.log(result);`;
             {/* Send Request Button */}
             <Button 
               onClick={handleTestRequest}
-              disabled={isLoading || !files.sourceImage || !files.targetImage}
+              disabled={isLoading || !isFormValid()}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
             >
               {isLoading ? (
