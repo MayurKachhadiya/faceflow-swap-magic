@@ -38,18 +38,22 @@ const SingleFaceSwap = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Source Face</h3>
             <ImageUpload
+              title="Source Face"
+              description="Upload the image containing the face you want to use"
               onImageSelect={setSourceImage}
               selectedImage={sourceImage}
-              placeholder="Upload Source Image"
+              onRemoveImage={() => setSourceImage(null)}
             />
           </div>
           
           <div>
             <h3 className="text-lg font-semibold mb-4">Target Image</h3>
             <ImageUpload
+              title="Target Image"
+              description="Upload the image where you want to place the face"
               onImageSelect={setTargetImage}
               selectedImage={targetImage}
-              placeholder="Upload Target Image"
+              onRemoveImage={() => setTargetImage(null)}
             />
           </div>
         </div>

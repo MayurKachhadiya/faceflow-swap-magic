@@ -47,9 +47,11 @@ const MultipleFaceSwap = () => {
               Group Photo
             </h3>
             <ImageUpload
+              title="Group Photo"
+              description="Upload the image containing multiple faces you want to swap"
               onImageSelect={setGroupImage}
               selectedImage={groupImage}
-              placeholder="Upload Group Photo"
+              onRemoveImage={() => setGroupImage(null)}
             />
           </div>
           
