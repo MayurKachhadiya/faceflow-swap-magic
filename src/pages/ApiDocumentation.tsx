@@ -95,7 +95,7 @@ const ApiDocumentation = () => {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
       
-      <div className="pt-16 flex w-full relative">
+      <div className="flex w-full">
         <NavigationSidebar
           navigationItems={navigationItems}
           activeSection={activeSection}
@@ -105,8 +105,8 @@ const ApiDocumentation = () => {
         />
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-64 min-h-screen">
-          <div className="max-w-4xl mx-auto px-6 py-8 lg:px-8">
+        <main className="flex-1 pt-16 lg:pl-64">
+          <div className="max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
             <IntroductionSection />
             <AuthenticationSection />
             <SingleFaceSwapSection />
