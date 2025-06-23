@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Send, Upload, Code, Copy, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,11 +36,11 @@ export const DashboardApiDocs = () => {
     }
   ];
 
-  const validateImageFile = (file: File): string | null => {
-    // Check file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  const validateImageFile = async (file: File): Promise<string | null> => {
+    // Check file type - only allow JPG and PNG
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      return 'Please upload a valid image file (JPEG, PNG, GIF, or WebP)';
+      return 'Please upload a valid JPG or PNG image file';
     }
 
     // Check file size (max 10MB)
@@ -60,22 +59,18 @@ export const DashboardApiDocs = () => {
           header += arr[i].toString(16);
         }
         
-        // Check for common image file signatures
+        // Check for JPG and PNG file signatures only
         const imageSignatures = [
           'ffd8ff', // JPEG
           '89504e47', // PNG
-          '47494638', // GIF
-          '52494646', // WebP (RIFF)
         ];
         
         const isValidImage = imageSignatures.some(sig => header.startsWith(sig));
-        resolve(isValidImage ? null : 'File does not appear to be a valid image');
+        resolve(isValidImage ? null : 'File does not appear to be a valid JPG or PNG image');
       };
       reader.onerror = () => resolve('Error reading file');
       reader.readAsArrayBuffer(file.slice(0, 4));
     });
-
-    return null;
   };
 
   const handleFileUpload = async (key: string, file: File | null) => {
@@ -86,19 +81,11 @@ export const DashboardApiDocs = () => {
     }
 
     // Validate the file
-    const validationError = validateImageFile(file);
+    const validationError = await validateImageFile(file);
     
-    if (typeof validationError === 'string') {
+    if (validationError) {
       setFileErrors(prev => ({ ...prev, [key]: validationError }));
       return;
-    }
-
-    if (validationError instanceof Promise) {
-      const error = await validationError;
-      if (error) {
-        setFileErrors(prev => ({ ...prev, [key]: error }));
-        return;
-      }
     }
 
     // File is valid
@@ -244,7 +231,7 @@ console.log(result);`;
                 <Input
                   id="source-image"
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png"
                   onChange={(e) => handleFileUpload('sourceImage', e.target.files?.[0] || null)}
                   className="mt-1"
                 />
@@ -266,7 +253,7 @@ console.log(result);`;
                 <Input
                   id="target-image"
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png"
                   onChange={(e) => handleFileUpload('targetImage', e.target.files?.[0] || null)}
                   className="mt-1"
                 />
@@ -289,7 +276,7 @@ console.log(result);`;
                   <Input
                     id="source-images"
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png"
                     multiple
                     onChange={(e) => handleFileUpload('sourceImages', e.target.files?.[0] || null)}
                     className="mt-1"
@@ -301,7 +288,7 @@ console.log(result);`;
                     </div>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    Supported formats: JPEG, PNG, GIF, WebP (Max: 10MB each)
+                    Supported formats: JPG, PNG (Max: 10MB each)
                   </p>
                 </div>
               )}
@@ -311,7 +298,7 @@ console.log(result);`;
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
               <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">File Requirements</h4>
               <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-1">
-                <li>• Supported formats: JPEG, PNG, GIF, WebP</li>
+                <li>• Supported formats: JPG, PNG only</li>
                 <li>• Maximum file size: 10MB per image</li>
                 <li>• Recommended resolution: 512x512 to 2048x2048 pixels</li>
                 <li>• Clear, well-lit faces work best</li>
