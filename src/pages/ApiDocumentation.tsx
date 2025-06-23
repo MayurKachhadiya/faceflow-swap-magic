@@ -106,7 +106,7 @@ const ApiDocumentation = () => {
 
         {/* Main Content */}
         <main className="flex-1 pt-16 lg:pl-64">
-          <div className="max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
             <IntroductionSection />
             <AuthenticationSection />
             <SingleFaceSwapSection />
