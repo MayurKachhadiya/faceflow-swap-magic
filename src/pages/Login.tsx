@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,14 +8,74 @@ import Navbar from '@/components/Navbar';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+
+    if (!isLogin) {
+      // Name validation
+      if (!name.trim()) {
+        newErrors.name = 'Full name is required';
+      } else if (name.trim().length < 2) {
+        newErrors.name = 'Name must be at least 2 characters';
+      }
+
+      // Phone validation
+      if (!phone.trim()) {
+        newErrors.phone = 'Phone number is required';
+      } else if (!/^\d{10,15}$/.test(phone.replace(/\s/g, ''))) {
+        newErrors.phone = 'Phone must be 10-15 digits only';
+      }
+
+      // Confirm password validation
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     // Handle login/signup logic here
-    console.log('Form submitted:', { email, password, isLogin });
+    const payload = isLogin 
+      ? { email, password, isLogin }
+      : { name, phone, email, password, isLogin };
+    
+    console.log('Form submitted:', payload);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow only digits and spaces
+    const value = e.target.value.replace(/[^\d\s]/g, '');
+    setPhone(value);
+    
+    // Clear error when user starts typing
+    if (errors.phone) {
+      setErrors(prev => ({ ...prev, phone: '' }));
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    
+    // Clear error when user starts typing
+    if (errors.name) {
+      setErrors(prev => ({ ...prev, name: '' }));
+    }
   };
 
   return (
@@ -39,6 +98,44 @@ const Login = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {!isLogin && (
+                <>
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      name="name"
+                      value={name}
+                      onChange={handleNameChange}
+                      placeholder="Enter your full name"
+                      required
+                      className={`mt-1 ${errors.name ? 'border-red-500' : ''}`}
+                    />
+                    {errors.name && (
+                      <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      name="phone"
+                      value={phone}
+                      onChange={handlePhoneChange}
+                      placeholder="Enter your phone number"
+                      required
+                      className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
+                    />
+                    {errors.phone && (
+                      <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                    )}
+                  </div>
+                </>
+              )}
+
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -72,11 +169,19 @@ const Login = () => {
                     id="confirmPassword"
                     type="password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (errors.confirmPassword) {
+                        setErrors(prev => ({ ...prev, confirmPassword: '' }));
+                      }
+                    }}
                     placeholder="Confirm your password"
                     required
-                    className="mt-1"
+                    className={`mt-1 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                   />
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+                  )}
                 </div>
               )}
 
@@ -89,7 +194,13 @@ const Login = () => {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {isLogin ? "Don't have an account?" : 'Already have an account?'}
                 <button
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setErrors({});
+                    setName('');
+                    setPhone('');
+                    setConfirmPassword('');
+                  }}
                   className="ml-1 text-primary hover:underline font-medium"
                 >
                   {isLogin ? 'Sign up' : 'Sign in'}
