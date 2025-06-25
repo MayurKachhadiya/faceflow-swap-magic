@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,8 @@ const Login = () => {
     const mode = searchParams.get('mode');
     if (mode === 'signup') {
       setIsLogin(false);
+    } else {
+      setIsLogin(true);
     }
   }, [searchParams]);
 
