@@ -1,6 +1,8 @@
 
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { CheckCircle } from 'lucide-react';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { DashboardHome } from '@/components/dashboard/DashboardHome';
 import { DashboardApiDocs } from '@/components/dashboard/DashboardApiDocs';
@@ -8,10 +10,30 @@ import { DashboardApiDocs } from '@/components/dashboard/DashboardApiDocs';
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+  const { toast } = useToast();
 
   // Mock authentication check - replace with real auth logic
   const isAuthenticated = true; // This should come from your auth system
-  const user = { name: 'John Doe', email: 'john@example.com' }; // Mock user data
+  const user = location.state?.user || { name: 'John Doe', email: 'john@example.com' };
+
+  // Show welcome toast if redirected from login/signup
+  useEffect(() => {
+    if (location.state?.message) {
+      toast({
+        title: "Welcome to your Dashboard!",
+        description: location.state.message,
+        variant: "default",
+        className: "border-green-500 bg-green-50 dark:bg-green-900/20",
+        action: (
+          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+        ),
+      });
+      
+      // Clear the state to prevent showing the toast again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, toast]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
