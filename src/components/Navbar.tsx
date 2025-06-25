@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -54,7 +55,7 @@ const Navbar = () => {
                 Login
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/login?mode=signup">
               <Button size="sm" className="btn-gradient">
                 Sign Up
               </Button>
@@ -97,7 +98,7 @@ const Navbar = () => {
                     Login
                   </Button>
                 </Link>
-                <Link to="/login" className="flex-1">
+                <Link to="/login?mode=signup" className="flex-1">
                   <Button size="sm" className="btn-gradient w-full">
                     Sign Up
                   </Button>
